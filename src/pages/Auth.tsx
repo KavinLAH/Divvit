@@ -205,6 +205,21 @@ const Auth = () => {
             variant="outline"
             type="button"
             className="h-12 border-border hover:bg-secondary"
+            onClick={async () => {
+              setLoading(true);
+              const redirectUrl = `${window.location.origin}/loading`;
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                  redirectTo: redirectUrl,
+                },
+              });
+              if (error) {
+                toast.error(error.message || "Failed to sign in with Google");
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
           >
             <img src={googleIcon} alt="Google" className="h-6 w-6" />
           </Button>

@@ -16,7 +16,7 @@ const Index = () => {
   const [fullName, setFullName] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -191,6 +191,15 @@ const Index = () => {
             variant="outline"
             type="button"
             className="h-12 border-border hover:bg-secondary"
+            onClick={async () => {
+              setLoading(true);
+              const { error } = await signInWithGoogle();
+              if (error) {
+                toast.error(error.message || "Failed to sign in with Google");
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
           >
             <img src={googleIcon} alt="Google" className="h-6 w-6" />
           </Button>
