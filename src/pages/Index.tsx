@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import googleIcon from "@/assets/google-icon.png";
 import appleIcon from "@/assets/apple-icon.png";
@@ -9,11 +12,66 @@ import appleIcon from "@/assets/apple-icon.png";
 const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signIn, signUp, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/home");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt", { email, password, rememberMe });
+    setIsLoading(true);
+
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (isSignUp && !fullName) {
+      toast({
+        title: "Error",
+        description: "Please enter your full name",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = isSignUp 
+        ? await signUp(email, password, fullName)
+        : await signIn(email, password);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,7 +85,7 @@ const Index = () => {
         {/* Heading */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">
-            Login to your account
+            {isSignUp ? "Create your account" : "Login to your account"}
           </h1>
           <p className="text-base text-muted-foreground">
             Let's start splitting with Divvy!
@@ -35,7 +93,23 @@ const Index = () => {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Full Name Input (Sign Up Only) */}
+          {isSignUp && (
+            <div className="space-y-2">
+              <label htmlFor="fullName" className="text-sm font-medium text-input-focus">
+                Full Name
+              </label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="border-input-focus focus:border-input-focus"
+              />
+            </div>
+          )}
           {/* Email Input */}
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-input-focus">
@@ -89,13 +163,25 @@ const Index = () => {
             </button>
           </div>
 
-          {/* Login Button */}
+          {/* Submit Button */}
           <Button
             type="submit"
+            disabled={isLoading}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 text-base font-semibold rounded-xl"
           >
-            Login
+            {isLoading ? "Please wait..." : isSignUp ? "Sign Up" : "Login"}
           </Button>
+
+          {/* Toggle Sign Up/Login */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-primary hover:underline"
+            >
+              {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign up"}
+            </button>
+          </div>
         </form>
 
         {/* Divider */}
