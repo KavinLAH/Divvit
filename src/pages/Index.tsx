@@ -122,7 +122,7 @@ const Index = () => {
           <Button
             variant="outline"
             type="button"
-            className="h-12 border-border hover:bg-secondary"
+            className="h-12 border-border bg-black hover:bg-black/90"
           >
             <img src={appleIcon} alt="Apple" className="h-6 w-6" />
           </Button>
