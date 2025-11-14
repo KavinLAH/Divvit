@@ -3,28 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import googleIcon from "@/assets/google-icon.png";
 import appleIcon from "@/assets/apple-icon.png";
 
-const Index = () => {
+const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if already logged in
-    if (user) {
-      navigate("/loading");
-    }
-  }, [user, navigate]);
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/loading");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && event === "SIGNED_IN") {
+        navigate("/loading");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,21 +41,31 @@ const Index = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
         if (error) throw error;
         toast.success("Welcome back!");
       } else {
-        if (!fullName.trim()) {
-          toast.error("Please enter your full name");
-          setLoading(false);
-          return;
-        }
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
+            emailRedirectTo: `${window.location.origin}/loading`,
+          },
+        });
+
         if (error) throw error;
         toast.success("Account created successfully!");
       }
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
+    } finally {
       setLoading(false);
     }
   };
@@ -160,12 +179,7 @@ const Index = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setFullName("");
-                setEmail("");
-                setPassword("");
-              }}
+              onClick={() => setIsLogin(!isLogin)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
@@ -207,4 +221,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Auth;
