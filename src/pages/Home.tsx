@@ -17,9 +17,9 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full space-y-6">
+      <main className="flex-1 px-4 py-2 max-w-md mx-auto w-full space-y-2">
         {/* Quick Scan Button */}
-        <Card className="bg-gradient-to-br from-primary to-primary/80 p-8 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
+        <Card className="bg-gradient-to-br from-primary to-primary/80 p-4 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
           <div className="bg-primary-foreground/20 rounded-xl p-4 border-2 border-primary-foreground/30">
             <Plus className="h-12 w-12 text-primary-foreground" />
           </div>
@@ -47,7 +47,7 @@ const Home = () => {
               <p className="text-xs text-muted-foreground">split so far...</p>
             </div>
           </Card>
-          
+
           <Card className="p-4 space-y-2">
             <div className="flex justify-center">
               <Clock className="h-8 w-8 text-primary" />
